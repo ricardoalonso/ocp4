@@ -1,0 +1,51 @@
+; Specify the time-to-live( TTL ) for the zone
+$TTL 86400  ; 1 Day ( we could have used 1D )
+
+; Begin Start Of Authority resource record
+{{ cluster_domain }}. IN  SOA {{ ansible_hostname }}.{{ cluster_domain }}. root.{{ ansible_hostname }}.{{ cluster_domain }}. (
+                                2020032803      ; serial number
+                                1H              ; refresh slave
+                                15M             ; retry query
+                                1W              ; expire
+                                1D              ; negative TTL 
+)
+
+; Specify our name servers 
+; owner                 TTL     CL  type        RDATA
+@                               IN  NS          {{ ansible_hostname }}.{{ cluster_domain }}.
+
+; List our CNAME records ( aliases ) here
+; owner                 TTL     CL  type        RDATA
+r1			3600	IN  CNAME	{{ ansible_hostname }}.{{ cluster_domain }}.
+ns1			3600	IN  CNAME	{{ ansible_hostname }}.{{ cluster_domain }}.
+{% for lb in groups.lbs %}
+api			3600	IN  CNAME 	{{ hostvars[lb].inventory_hostname }}.{{ cluster_domain }}.
+api-int			3600	IN  CNAME 	{{ hostvars[lb].inventory_hostname }}.{{ cluster_domain }}.
+{{ wildcard_domain }}	3600	IN  CNAME	{{ hostvars[lb].inventory_hostname }}.{{ cluster_domain }}.
+{% endfor %}
+{% for m in groups.masters %}
+{{ m }} 		3600	IN  CNAME	etcd-{{ loop.index }}.{{ cluster_domain }}.
+{% endfor %}
+
+; List our A records ( hosts ) here
+; owner                 TTL     CL  type        RDATA
+{{ inventory_hostname }}		3600	IN  A		{{ host_ip }}
+{% for l in groups.lbs %}
+{{ hostvars[l].inventory_hostname }}			3600	IN  A		{{ hostvars[l].host_ip }}
+{% endfor %}
+{% for b in groups.bootstraps %}
+{{ hostvars[b].inventory_hostname }}			3600	IN  A		{{ hostvars[b].host_ip }}
+{% endfor %}
+{% for m in groups.masters %}
+etcd-{{ loop.index }}			3600	IN  A		{{ hostvars[m].host_ip }}
+{% endfor %}
+{% for n in groups.nodes %}
+{{ hostvars[n].inventory_hostname }}			3600	IN  A		{{ hostvars[n].host_ip }}
+{% endfor %}
+
+; List our SRV records here
+; owner			TTL	CL  type	RDATA
+; _service._proto.name. TTL	cls SRV	prio	weight	port	target.
+{% for m in groups.masters %}
+_etcd-server-ssl._tcp	3600 	IN  SRV	0	10	2380	etcd-{{ loop.index }}.{{ cluster.domain }}.
+{% endfor %}

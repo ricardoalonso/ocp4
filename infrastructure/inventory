@@ -1,0 +1,38 @@
+bastion host_ip=10.11.12.1 mac_address=52:54:00:ab:cd:01
+
+[lbs]
+lb host_ip=10.11.12.9 mac_address=52:54:00:ab:cd:09
+
+[masters]
+control01 host_ip=10.11.12.11 mac_address=52:54:00:ab:cd:11
+control02 host_ip=10.11.12.12 mac_address=52:54:00:ab:cd:12
+control03 host_ip=10.11.12.13 mac_address=52:54:00:ab:cd:13
+
+[nodes]
+compute01 host_ip=10.11.12.21 mac_address=52:54:00:ab:cd:21
+compute02 host_ip=10.11.12.22 mac_address=52:54:00:ab:cd:22
+compute03 host_ip=10.11.12.23 mac_address=52:54:00:ab:cd:23
+compute04 host_ip=10.11.12.24 mac_address=52:54:00:ab:cd:24
+compute05 host_ip=10.11.12.25 mac_address=52:54:00:ab:cd:25
+
+[bootstraps]
+bootstrap host_ip=10.11.12.10 mac_address=52:54:00:ab:cd:10
+
+[ocp4:children]
+masters
+nodes
+
+[ocp4:vars]
+ansible_ssh_user = core
+
+[all:vars]
+ocp_major_version = 4.4
+ocp_minor_version = 4.4.4
+rhcos_version = 4.4.3
+cluster_domain = ocp.local
+# the wildcard domain will be composed later: wildcard_domain + cluster_domain
+wildcard_domain = *.apps
+cluster_subnet = 10.11.12.0
+cluster_netmask = 255.255.255.0
+cluster_reverse_net = 12.11.10
+dhcpd_range = 10.11.12.50 10.11.12.99

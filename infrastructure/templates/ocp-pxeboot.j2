@@ -1,0 +1,7 @@
+default linux
+prompt 0
+timeout 1
+label linux
+        kernel /vmlinuz
+        ipappend 2
+        append initrd=/initramfs console=tty0 console=ttyS0 nomodeset rd.neednet=1 ip=dhcp coreos.inst=yes coreos.inst.install_dev=vda coreos.inst.image_url=http://{{ inventory_hostname }}.{{ cluster_domain }}/images/coreos.raw.gz coreos.inst.ignition_url=http://{{ inventory_hostname }}.{{ cluster_domain }}:8080/configs/{{ ign_file }}.ign 

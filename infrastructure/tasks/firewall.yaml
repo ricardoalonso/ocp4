@@ -1,0 +1,21 @@
+---
+- name: ensure firewalld is up and running
+  service:
+    name: firewalld
+    state: started
+    enabled: true
+- name: open services at the firewalld
+  firewalld:
+    service: "{{ item }}"
+    state: enabled
+    permanent: true
+    immediate: true
+  loop: "{{ firewall.services }}"
+- name: open ports at the firewalld
+  firewalld:
+    port: "{{ item }}"
+    state: enabled
+    permanent: true
+    immediate: true
+  loop: "{{ firewall.ports }}"
+...

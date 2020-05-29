@@ -1,0 +1,96 @@
+# if the /var/lib/tftpboot isn't a symlink to /tftpboot, replace it
+# the tftp server on rhel 8 points to /var/lib/tftpboot but the 
+# package syslinux-tftp installs on /tftpboot
+- name: Check the status of the /var/lib/tftpboot folder
+  stat:
+    path: /var/lib/tftpboot
+  register: tftpboot
+- name: Remove the folder if it isn't a link
+  file:
+    path: /var/lib/tftpboot
+    state: absent
+  when: not tftpboot.stat.islnk
+  notify: restart tftp
+- name: create the symlink to /tftpboot
+  file:
+    path: /var/lib/tftpboot
+    src: /tftpboot
+    state: link
+
+- name: create pxelinux folder to hole the configuration
+  file:
+    path: /tftpboot/pxelinux/pxelinux.cfg
+    state: directory
+    recurse: true
+- name: create the boot configuration files
+  vars:
+    ign_file: "{{ item }}"
+  template:
+    src: "templates/ocp-pxeboot.j2"
+    dest: "/tftpboot/pxelinux/pxelinux.cfg/ocp-{{ item }}"
+  loop:
+  - bootstrap
+  - master
+  - worker
+- set_fact:
+    v_bootstraps: "{{ ['ocp-bootstrap'] | product(groups.bootstraps) | list }}"
+    v_masters: "{{ ['ocp-master'] | product(groups.masters) | list }}"
+    v_nodes: "{{ ['ocp-node'] | product(groups.nodes) | list }}"
+- name: create the symlinks for the nodes to boot
+  file:
+    path: "/tftpboot/pxelinux/pxelinux.cfg/01-{{ hostvars[item[1]].mac_address | replace(':','-') }}"
+    src: "{{ item[0] }}"
+    state: link
+  loop: "{{ v_bootstraps + v_masters + v_nodes }}"
+- name: enable and start tftp server
+  service:
+    name: tftp
+    state: started
+    enabled: true
+
+# Download required files to setup apache and pxe boot
+# - rhcos-X.X.X-x86_64-installer-kernel-x86_64
+# - rhcos-X.X.X-x86_64-installer-initramfs.x86_64.img
+# - rhcos-X.X.X-x86_64-metal.x86_64.raw.gz
+- name: create files fact to download
+  set_fact:
+    to_download:
+    - name: "rhcos-{{ rhcos_version }}-x86_64-installer-kernel-x86_64"
+      dest: /tftpboot/pxelinux
+      link: vmlinuz
+    - name: "rhcos-{{ rhcos_version }}-x86_64-installer-initramfs.x86_64.img"
+      dest: /tftpboot/pxelinux
+      link: initramfs
+    - name: "rhcos-{{ rhcos_version }}-x86_64-metal.x86_64.raw.gz"
+      dest: /var/www/html/images/
+      link: coreos.raw.gz
+- name: create images folder
+  file:
+    path: /var/www/html/images
+    state: directory
+- name: download coreos, kernel and initram images
+  get_url:
+    src: "https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/{{ ocp_major_version }}/{{ rhcos_version }}/{{ item.name }}"
+    dest: "{{ item.dest }}"
+  loop: "{{ to_download }}"
+- name: create symlinks for downloaded files
+  file:
+    path: "{{ item.dest }}/{{ item.link }}"
+    src: "{{ item.name }}"
+    state: link
+
+# Configure apache to run on port 8080 and start it
+- name: set apache to run on port 8080
+  lineinfile:
+    path: /etc/httpd/conf/httpd.conf
+    line: Listen 8080
+    regexp: '^Listen '
+  notify: restart httpd
+- name: start and enable httpd
+  service:
+    name: httpd
+    state: started
+    enabled: true
+
+- name: run restorecon to double check for selinux issues
+  shell: restorecon -RFv /etc /var/named /tftpboot /var/www/html

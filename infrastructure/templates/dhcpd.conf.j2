@@ -1,0 +1,64 @@
+#
+# DHCP Server Configuration file.
+#   see /usr/share/doc/dhcp-server/dhcpd.conf.example
+#   see dhcpd.conf(5) man page
+#
+
+allow booting;
+allow bootp;
+# This option is to allow the use of tunnels between machines
+# and have more than 1 single server. 
+option interface-mtu 1450;
+option space pxelinux;
+option pxelinux.magic code 208 = string;
+option pxelinux.configfile code 209 = text;
+option pxelinux.pathprefix code 210 = text;
+option pxelinux.reboottime code 211 = unsigned integer 32;
+option architecture-type code 93 = unsigned integer 16;
+option domain-name "{{ cluster_domain }}";
+default-lease-time 600;
+max-lease-time 7200;
+authoritative;
+
+subnet {{ cluster_subnet }} netmask {{ cluster_netmask }} {
+  range {{ dhcp_range }};
+  option routers r1.{{ cluster_domain }};
+  option domain-name-servers ns1.{{ cluster_domain }};
+  option domain-name "{{ cluster_domain }}";
+  
+  class "pxeclients" {
+    match if substring (option vendor-class-identifier, 0, 9) = "PXEClient";
+    next-server {{ inventory_hostname }}.{{ cluster_domain }};
+    option tftp-server-name "{{ inventory_hostname }}.{{ cluster_domain }}";
+
+    if option architecture-type = 00:07 {
+      filename "uefi/shim.efi";
+    } else {
+      filename "pxelinux/pxelinux.0";
+    }
+  }
+}
+{% for l in groups.lbs %}
+host {{ l }} {
+  hardware ethernet {{ hostvars[l].mac_address }};
+  fixed-address {{ l }}.{{ cluster_domain }};
+}
+{% endfor %}
+{% for b in groups.bootstraps %}
+host {{ b }} {
+  hardware ethernet {{ hostvars[b].mac_address }};
+  fixed-address {{ l }}.{{ cluster_domain }};
+}
+{% endfor %}
+{% for m in groups.masters %}
+host {{ m }} {
+  hardware ethernet {{ hostvars[m].mac_address }};
+  fixed-address {{ m }}.{{ cluster_domain }};
+}
+{% endfor %}
+{% for n in groups.nodes %}
+host {{ n }} {
+  hardware ethernet {{ hostvars[n].mac_address }};
+  fixed-address {{ n }}.{{ cluster_domain }};
+}
+{% endfor %}

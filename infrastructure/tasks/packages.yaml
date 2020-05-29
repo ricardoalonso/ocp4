@@ -1,0 +1,19 @@
+---
+# Packages update and install
+- name: update the system (reboot may be necessary)
+  yum:
+    name: "*"
+    state: latest
+  register: update_out
+- name: install required packages
+  yum:
+    name: "{{ packages }}"
+    state: latest
+- name: check if reboot is necessary
+  shell: needs-restarting -r
+  register: reboot
+  ignore_errors: true
+  notify: reboot machine
+  failed_when: reboot is not failed
+  when: do_reboot
+...

@@ -1,0 +1,71 @@
+---
+# Playbook used to setup the bastion machine for the services:
+# - DHCP
+# - DNS
+# - TFTP 
+# - Apache (for pxe content) 
+# 
+# After the package upgrade, if necessary, the machine will be rebooted. To 
+# disable the reboot option, change the variable do_reboot to "false". You may
+# need to do it manually in case the kernel gets updated. 
+- name: setup the bastion machine
+  hosts: bastion
+  become: true
+  vars:
+    do_reboot: true
+    packages: 
+    - bind
+    - bind-utils
+    - dhcp-server
+    - chrony
+    - tftp-server
+    - syslinux-tftp
+    - httpd
+    - policycoreutils-python-utils
+    - firewalld
+    firewall:
+      services:
+      - dhcp
+      - dns
+      - tftp
+      ports:
+      - 8080/tcp
+  tasks:
+
+  # Packages update and install 
+  - name: Run tasks to setup packages
+    import_tasks: tasks/packages.yaml
+
+  # Firewall Configuration
+  - name: Run tasks to setup firewall
+    import_tasks: tasks/firewall.yaml
+
+  # DNS configuration
+  - name: Run tasks to setup the DNS
+    import_tasks: tasks/dns.yaml
+
+  # DHCP Configuration
+  - name: Run tasks to setup the DHCP
+    import_tasks: tasks/dhcp.yaml
+
+  # PXE/TFTP configuration
+  - name: Run tasks to setup PXE/TFTP
+    import_tasks: tasks/pxe.yaml
+
+  handlers:
+  - name: restart named
+    service:
+      named: named
+      state: restarted
+  - name: restart dhcpd
+    service:
+      name: dhcpd
+      state: restarted
+  - name: restart tftp
+    service: 
+      name: tftp 
+      state: restarted
+  - name: reboot machine
+    reboot:
+
+...

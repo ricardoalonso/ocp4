@@ -1,0 +1,13 @@
+---
+- name: Copy dhcpd.conf file
+  template:
+    src: templates/dhcpd.conf.j2
+    dest: /etc/dhcp/dhcpd.conf
+  notify: restart dhcpd
+
+- name: enable and start dhcpd service
+  service:
+    name: dhcpd 
+    state: started
+    enabled: true
+...
