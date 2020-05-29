@@ -9,7 +9,7 @@
 # disable the reboot option, change the variable do_reboot to "false". You may
 # need to do it manually in case the kernel gets updated. 
 - name: setup the bastion machine
-  hosts: bastion
+  hosts: bastions
   become: true
   vars:
     do_reboot: true
@@ -19,7 +19,7 @@
     - dhcp-server
     - chrony
     - tftp-server
-    - syslinux-tftp
+    - syslinux-tftpboot
     - httpd
     - policycoreutils-python-utils
     - firewalld
@@ -55,7 +55,7 @@
   handlers:
   - name: restart named
     service:
-      named: named
+      name: named
       state: restarted
   - name: restart dhcpd
     service:
@@ -64,6 +64,10 @@
   - name: restart tftp
     service: 
       name: tftp 
+      state: restarted
+  - name: restart httpd
+    service:
+      name: httpd
       state: restarted
   - name: reboot machine
     reboot:

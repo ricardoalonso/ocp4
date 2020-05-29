@@ -2,7 +2,7 @@
 $TTL 86400  ; 1 Day ( we could have used 1D )
 
 ; Begin Start Of Authority resource record
-{{ cluster_reverse_net }}.IN-ADDR.ARPA. IN  SOA {{ inventory_hostname }}.{{ cluster.domain }} root.{{ inventory_hostname }}.{{ cluster.domain }}. (
+{{ cluster_reverse_net }}.IN-ADDR.ARPA. IN  SOA {{ inventory_hostname }}.{{ cluster_domain }} root.{{ inventory_hostname }}.{{ cluster_domain }}. (
                                 2020031001      ; serial number
                                 1H              ; refresh slave
                                 15M             ; retry query
@@ -16,13 +16,13 @@ $TTL 86400  ; 1 Day ( we could have used 1D )
 
 ; List our PTR records ( rev lookup ) here
 ; owner                 TTL     CL  type        RDATA
-{{ host_ip.split{'.')[3] }}	IN  PTR		{{ inventory_hostname }}.{{ cluster_domain }}.
+{{ host_ip.split('.')[3] }}	IN  PTR		{{ inventory_hostname }}.{{ cluster_domain }}.
 {% for b in groups.bootstraps %}
-{{ hostvars[b].host_ip.split('.') }} IN  PTR	{{ hostvars[b].inventory_hostname }}.{{ cluster_domain }}.
+{{ hostvars[b].host_ip.split('.')[3] }} IN  PTR	{{ hostvars[b].inventory_hostname }}.{{ cluster_domain }}.
 {% endfor %}
 {% for m in groups.masters %}
-{{ hostvars[m].host_ip.split('.') }} IN  PTR	{{ hostvars[m].inventory_hostname }}.{{ cluster_domain }}.
+{{ hostvars[m].host_ip.split('.')[3] }} IN  PTR	{{ hostvars[m].inventory_hostname }}.{{ cluster_domain }}.
 {% endfor %}
 {% for n in groups.nodes %}
-{{ hostvars[n].host_ip.split('.') }} IN  PTR	{{ hostvars[n].inventory_hostname }}.{{ cluster_domain }}.
+{{ hostvars[n].host_ip.split('.')[3] }} IN  PTR	{{ hostvars[n].inventory_hostname }}.{{ cluster_domain }}.
 {% endfor %}

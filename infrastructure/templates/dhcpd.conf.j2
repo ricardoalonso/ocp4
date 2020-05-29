@@ -47,7 +47,7 @@ host {{ l }} {
 {% for b in groups.bootstraps %}
 host {{ b }} {
   hardware ethernet {{ hostvars[b].mac_address }};
-  fixed-address {{ l }}.{{ cluster_domain }};
+  fixed-address {{ b }}.{{ cluster_domain }};
 }
 {% endfor %}
 {% for m in groups.masters %}

@@ -1,3 +1,4 @@
+[bastions]
 bastion host_ip=10.11.12.1 mac_address=52:54:00:ab:cd:01
 
 [lbs]
@@ -29,10 +30,10 @@ ansible_ssh_user = core
 ocp_major_version = 4.4
 ocp_minor_version = 4.4.4
 rhcos_version = 4.4.3
-cluster_domain = ocp.local
+cluster_domain = mycluster.local
 # the wildcard domain will be composed later: wildcard_domain + cluster_domain
 wildcard_domain = *.apps
 cluster_subnet = 10.11.12.0
 cluster_netmask = 255.255.255.0
 cluster_reverse_net = 12.11.10
-dhcpd_range = 10.11.12.50 10.11.12.99
+dhcp_range = 10.11.12.50 10.11.12.99

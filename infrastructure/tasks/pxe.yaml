@@ -35,7 +35,7 @@
 - set_fact:
     v_bootstraps: "{{ ['ocp-bootstrap'] | product(groups.bootstraps) | list }}"
     v_masters: "{{ ['ocp-master'] | product(groups.masters) | list }}"
-    v_nodes: "{{ ['ocp-node'] | product(groups.nodes) | list }}"
+    v_nodes: "{{ ['ocp-worker'] | product(groups.nodes) | list }}"
 - name: create the symlinks for the nodes to boot
   file:
     path: "/tftpboot/pxelinux/pxelinux.cfg/01-{{ hostvars[item[1]].mac_address | replace(':','-') }}"
@@ -70,7 +70,7 @@
     state: directory
 - name: download coreos, kernel and initram images
   get_url:
-    src: "https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/{{ ocp_major_version }}/{{ rhcos_version }}/{{ item.name }}"
+    url: "https://mirror.openshift.com/pub/openshift-v4/dependencies/rhcos/{{ ocp_major_version }}/{{ rhcos_version }}/{{ item.name }}"
     dest: "{{ item.dest }}"
   loop: "{{ to_download }}"
 - name: create symlinks for downloaded files
@@ -78,6 +78,7 @@
     path: "{{ item.dest }}/{{ item.link }}"
     src: "{{ item.name }}"
     state: link
+  loop: "{{ to_download }}"
 
 # Configure apache to run on port 8080 and start it
 - name: set apache to run on port 8080

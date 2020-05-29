@@ -47,5 +47,5 @@ etcd-{{ loop.index }}			3600	IN  A		{{ hostvars[m].host_ip }}
 ; owner			TTL	CL  type	RDATA
 ; _service._proto.name. TTL	cls SRV	prio	weight	port	target.
 {% for m in groups.masters %}
-_etcd-server-ssl._tcp	3600 	IN  SRV	0	10	2380	etcd-{{ loop.index }}.{{ cluster.domain }}.
+_etcd-server-ssl._tcp	3600 	IN  SRV	0	10	2380	etcd-{{ loop.index }}.{{ cluster_domain }}.
 {% endfor %}
