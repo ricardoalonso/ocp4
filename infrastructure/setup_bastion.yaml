@@ -23,6 +23,7 @@
     - httpd
     - policycoreutils-python-utils
     - firewalld
+    - tmux
     firewall:
       services:
       - dhcp

@@ -19,6 +19,7 @@ option domain-name "{{ cluster_domain }}";
 default-lease-time 600;
 max-lease-time 7200;
 authoritative;
+deny unknown-clients;
 
 subnet {{ cluster_subnet }} netmask {{ cluster_netmask }} {
   range {{ dhcp_range }};
